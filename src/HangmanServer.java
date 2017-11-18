@@ -1,16 +1,19 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Random;
+
+
+
 
 public class HangmanServer {
 
-    /**
-     * Runs the application. Pairs up clients that connect.
-     */
+    public static String[] dictionary = {"banana", "mistake", "hopons", "her",
+            "illusion", "marryme", "blueman", "bees", "cornball", "cousin",
+            "family", "seal", "poppop", "freebie", "franklin"};
+
+
     public static void main(String[] args) throws Exception {
         ServerSocket listener = new ServerSocket();
         System.out.println("Hangman Server is Running");
@@ -19,8 +22,45 @@ public class HangmanServer {
         while (true) {
             Socket clientSocket = listener.accept();
             System.out.println("Connection Accepted");
+            Game hangmanGame = new Game(clientSocket);
+            System.out.println("Word is " + hangmanGame.getWord());
+            hangmanGame.writeMessage("Are you ready?");
+            System.out.println("Message Sent");
         }
     }
+}
+
+class Game {
+
+    private String word;
+    private DataOutputStream writer;
+    private int numIncorrect;
+    private int wordLength;
+
+    public Game(Socket clientSocket) throws Exception{
+        numIncorrect = 0;
+        Random rand = new Random();
+        int index = rand.nextInt(15);
+        word = HangmanServer.dictionary[index];
+        wordLength = word.length();
+        writer = new DataOutputStream(clientSocket.getOutputStream());
+    }
+
+    public String getWord() {
+        return this.word;
+    }
+
+    public void writeMessage(String message) throws Exception{
+        byte flag = (byte) (message.length());
+        byte[] messageBytes = message.getBytes();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(flag);
+        out.write(messageBytes);
+        byte[] byteMessage = out.toByteArray();
+        System.out.println(byteMessage);
+        this.writer.write(byteMessage,0,message.length()+1);
+    }
+
 }
 //
 //

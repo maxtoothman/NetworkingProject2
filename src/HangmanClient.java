@@ -2,10 +2,9 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -34,16 +33,56 @@ import javax.swing.JPanel;
  */
 public class HangmanClient {
 
+    byte[] readBuffer;
+    int numIncorrect;
+    int wordLength;
+    Socket socket;
+    InputStream stream;
+    Scanner scan;
 
+    public HangmanClient() throws Exception{
+        readBuffer = new byte[20];
+        numIncorrect = 0;
+        socket = new Socket("localhost", 8080);
+        stream = socket.getInputStream();
+        System.out.println("New Client Created");
+        scan = new Scanner(System.in);
+
+    }
     /**
      * Constructs the client by connecting to a server, laying out the
      * GUI and registering GUI listeners.
      */
     public static void main(String[] args) throws Exception {
+        System.out.println("Hangman Client is Running");
+        HangmanClient client = new HangmanClient();
+        client.readMessage();
+        client.writeMessage();
+    }
 
-        // Setup networking
-        Socket socket = new Socket("localhost", 8080);
-        System.out.println("Tic Tac Toe Client is Running");
+    public int readMessage() throws Exception{
+        int msgFlag = this.stream.read();
+        //System.out.println(readBuffer);
+        //System.out.println(msgFlag);
+        String message;
+        if (msgFlag > 0) {
+            this.stream.read(this.readBuffer);
+            message = new String(readBuffer);
+            message = message.substring(0,msgFlag);
+            System.out.println(message);
+        }
+        return msgFlag;
+    }
+
+    public void writeMessage() throws Exception{
+        String message = this.scan.nextLine();
+        byte msgLength = (byte) (message.length());
+        byte[] messageBytes = message.getBytes();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(msgLength);
+        out.write(messageBytes);
+        byte[] byteMessage = out.toByteArray();
+
     }
 }
 //        in = new BufferedReader(new InputStreamReader(
