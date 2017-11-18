@@ -38,6 +38,7 @@ public class HangmanClient {
     int wordLength;
     Socket socket;
     InputStream stream;
+    private DataOutputStream writer;
     Scanner scan;
 
     public HangmanClient() throws Exception{
@@ -45,6 +46,7 @@ public class HangmanClient {
         numIncorrect = 0;
         socket = new Socket("localhost", 8080);
         stream = socket.getInputStream();
+        writer = new DataOutputStream(socket.getOutputStream());
         System.out.println("New Client Created");
         scan = new Scanner(System.in);
 
@@ -82,7 +84,7 @@ public class HangmanClient {
         out.write(msgLength);
         out.write(messageBytes);
         byte[] byteMessage = out.toByteArray();
-
+        this.writer.write(byteMessage,0,message.length()+1);
     }
 }
 //        in = new BufferedReader(new InputStreamReader(

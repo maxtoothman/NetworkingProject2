@@ -3,8 +3,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
-
-
+import java.util.Scanner;
 
 
 public class HangmanServer {
@@ -26,24 +25,33 @@ public class HangmanServer {
             System.out.println("Word is " + hangmanGame.getWord());
             hangmanGame.writeMessage("Are you ready?");
             System.out.println("Message Sent");
+            hangmanGame.readMessage();
         }
     }
 }
 
 class Game {
 
+    byte[] readBuffer;
     private String word;
     private DataOutputStream writer;
     private int numIncorrect;
     private int wordLength;
+    Socket playerSocket;
+    InputStream stream;
+    Scanner scan;
 
     public Game(Socket clientSocket) throws Exception{
+        readBuffer = new byte[20];
+        playerSocket = clientSocket;
         numIncorrect = 0;
         Random rand = new Random();
         int index = rand.nextInt(15);
         word = HangmanServer.dictionary[index];
         wordLength = word.length();
-        writer = new DataOutputStream(clientSocket.getOutputStream());
+        writer = new DataOutputStream(playerSocket.getOutputStream());
+        stream = playerSocket.getInputStream();
+        scan = new Scanner(System.in);
     }
 
     public String getWord() {
@@ -57,8 +65,21 @@ class Game {
         out.write(flag);
         out.write(messageBytes);
         byte[] byteMessage = out.toByteArray();
-        System.out.println(byteMessage);
+        //System.out.println(byteMessage);
         this.writer.write(byteMessage,0,message.length()+1);
+    }
+
+    public void readMessage() throws Exception {
+        int msgFlag = this.stream.read();
+        //System.out.println(readBuffer);
+        //System.out.println(msgFlag);
+        String message;
+        if (msgFlag > 0) {
+            this.stream.read(this.readBuffer);
+            message = new String(readBuffer);
+            message = message.substring(0,msgFlag);
+            System.out.println(message);
+        }
     }
 
 }
