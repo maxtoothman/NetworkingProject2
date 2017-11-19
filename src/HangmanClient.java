@@ -43,6 +43,8 @@ public class HangmanClient {
     private DataOutputStream writer;
     private Scanner scan;
 
+    private boolean startGame = false;
+
     private HangmanClient() throws Exception{
         readBuffer = new byte[50];
         numIncorrect = 0;
@@ -58,10 +60,10 @@ public class HangmanClient {
         System.out.println("Hangman Client is Running");
         HangmanClient client = new HangmanClient();
         int status = client.readMessage();
-        System.out.println("Msgflag " + status);
+//        System.out.println("Msgflag " + status);
         client.writeMessage();
         status = client.readMessage();
-        System.out.println("Msgflag " + status);
+//        System.out.println("Msgflag " + status);
     }
 
     private int readMessage() throws Exception{
@@ -71,7 +73,7 @@ public class HangmanClient {
         String message;
         if (msgFlag > 0) {
             int status = this.stream.read(this.readBuffer);
-            System.out.println("Read status " + status);
+//            System.out.println("Read status " + status);
             message = new String(readBuffer);
             message = message.substring(0,msgFlag);
             System.out.println(message);
@@ -81,7 +83,7 @@ public class HangmanClient {
             int numIncorrect = this.stream.read();
             System.out.println("Number Incorrect is " + numIncorrect);
             int status = this.stream.read(this.readBuffer);
-            System.out.println("Read status " + status);
+//            System.out.println("Read status " + status);
             message = new String(readBuffer);
             String guesses = message.substring(wordLength,
                     wordLength + numIncorrect);
@@ -92,7 +94,7 @@ public class HangmanClient {
         return msgFlag;
     }
 
-    private void writeMessage() throws Exception{
+    private void writeMessage() throws Exception {
         String message = this.scan.nextLine();
         byte msgLength = (byte) (message.length());
         byte[] messageBytes = message.getBytes();
@@ -100,7 +102,16 @@ public class HangmanClient {
         out.write(msgLength);
         out.write(messageBytes);
         byte[] byteMessage = out.toByteArray();
-        this.writer.write(byteMessage,0,message.length()+1);
+        this.writer.write(byteMessage, 0, message.length() + 1);
+
+        //Make sure the start game message is "y". Otherwise exit application
+        startGame = (startGame || !message.equals("n")) && !startGame && message.equals("y");
+
+        //TODO: add a check to ask again if start game response is not "y/Y" or "n/N"
+        if (!startGame) {
+            System.exit(0);
+        }
+
     }
 }
 //        in = new BufferedReader(new InputStreamReader(

@@ -21,6 +21,7 @@ public class HangmanServer {
         System.out.println("Hangman Server is Running");
         InetSocketAddress listenerAddress = new InetSocketAddress(8080);
         listener.bind(listenerAddress);
+        //noinspection InfiniteLoopStatement
         while (true) {
             Socket clientSocket = listener.accept();
             System.out.println("Connection Accepted");
@@ -110,7 +111,7 @@ class Game {
         String message;
         if (msgFlag > 0) {
             int status = this.stream.read(this.readBuffer);
-            System.out.println("Read message status: " + status);
+//            System.out.println("Read message status: " + status);
             message = new String(readBuffer);
             return message.substring(0,msgFlag);
         }
