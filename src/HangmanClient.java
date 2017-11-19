@@ -42,7 +42,7 @@ public class HangmanClient {
     Scanner scan;
 
     public HangmanClient() throws Exception{
-        readBuffer = new byte[20];
+        readBuffer = new byte[50];
         numIncorrect = 0;
         socket = new Socket("localhost", 8080);
         stream = socket.getInputStream();
@@ -51,15 +51,13 @@ public class HangmanClient {
         scan = new Scanner(System.in);
 
     }
-    /**
-     * Constructs the client by connecting to a server, laying out the
-     * GUI and registering GUI listeners.
-     */
+
     public static void main(String[] args) throws Exception {
         System.out.println("Hangman Client is Running");
         HangmanClient client = new HangmanClient();
         client.readMessage();
         client.writeMessage();
+        client.readMessage();
     }
 
     public int readMessage() throws Exception{
@@ -72,6 +70,18 @@ public class HangmanClient {
             message = new String(readBuffer);
             message = message.substring(0,msgFlag);
             System.out.println(message);
+        } else {
+            int wordLength = this.stream.read();
+            System.out.println("Word Length is " + wordLength);
+            int numIncorrect = this.stream.read();
+            System.out.println("Number Incorrect is " + numIncorrect);
+            this.stream.read(this.readBuffer);
+            message = new String(readBuffer);
+            String guesses = message.substring(wordLength,
+                    wordLength + numIncorrect);
+            message = message.substring(0,wordLength);
+            System.out.println("Message is " + message);
+            System.out.println("Guesses are " + guesses);
         }
         return msgFlag;
     }

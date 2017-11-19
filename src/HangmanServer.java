@@ -23,9 +23,8 @@ public class HangmanServer {
             System.out.println("Connection Accepted");
             Game hangmanGame = new Game(clientSocket);
             System.out.println("Word is " + hangmanGame.getWord());
-            hangmanGame.writeMessage("Are you ready?");
-            System.out.println("Message Sent");
-            hangmanGame.readMessage();
+            hangmanGame.startGame();
+            hangmanGame.writeControl();
         }
     }
 }
@@ -33,7 +32,9 @@ public class HangmanServer {
 class Game {
 
     byte[] readBuffer;
-    private String word;
+    String word;
+    byte[] emptywordArray;
+    byte[] guessArray;
     private DataOutputStream writer;
     private int numIncorrect;
     private int wordLength;
@@ -42,13 +43,19 @@ class Game {
     Scanner scan;
 
     public Game(Socket clientSocket) throws Exception{
-        readBuffer = new byte[20];
+        readBuffer = new byte[50];
         playerSocket = clientSocket;
         numIncorrect = 0;
         Random rand = new Random();
         int index = rand.nextInt(15);
         word = HangmanServer.dictionary[index];
         wordLength = word.length();
+        guessArray = new byte[6];
+        emptywordArray = new byte[wordLength];
+        for (int i =0;i<wordLength;i++) {
+            emptywordArray[i] = (byte)'_';
+        }
+        System.out.println("Empty word array is " + emptywordArray);
         writer = new DataOutputStream(playerSocket.getOutputStream());
         stream = playerSocket.getInputStream();
         scan = new Scanner(System.in);
@@ -56,6 +63,18 @@ class Game {
 
     public String getWord() {
         return this.word;
+    }
+
+    public void startGame() throws Exception {
+        this.writeMessage("Ready to start game? (y/n):");
+        System.out.println("Message Sent");
+        String response = this.readMessage();
+        System.out.println("Reply is " + response);
+        if (response.equals(new String("y"))) {
+            System.out.printf("Client is ready");
+        } else {
+            System.out.println("Client is not ready");
+        }
     }
 
     public void writeMessage(String message) throws Exception{
@@ -69,7 +88,19 @@ class Game {
         this.writer.write(byteMessage,0,message.length()+1);
     }
 
-    public void readMessage() throws Exception {
+    public void writeControl() throws Exception{
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write((byte) 0);
+        out.write((byte) wordLength);
+        out.write((byte) numIncorrect);
+        byte[] data = new String(this.emptywordArray).getBytes();
+        out.write(data);
+        out.write(guessArray,0,numIncorrect);
+        byte[] controlMessage = out.toByteArray();
+        this.writer.write(controlMessage,0,wordLength+3+numIncorrect);
+    }
+
+    public String readMessage() throws Exception {
         int msgFlag = this.stream.read();
         //System.out.println(readBuffer);
         //System.out.println(msgFlag);
@@ -77,8 +108,10 @@ class Game {
         if (msgFlag > 0) {
             this.stream.read(this.readBuffer);
             message = new String(readBuffer);
-            message = message.substring(0,msgFlag);
-            System.out.println(message);
+            return message.substring(0,msgFlag);
+        }
+        else {
+            return "";
         }
     }
 
