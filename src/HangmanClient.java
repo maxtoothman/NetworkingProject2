@@ -35,15 +35,15 @@ import javax.swing.JPanel;
  */
 public class HangmanClient {
 
-    byte[] readBuffer;
-    int numIncorrect;
+    private byte[] readBuffer;
+    private int numIncorrect;
     int wordLength;
-    Socket socket;
-    InputStream stream;
+    private Socket socket;
+    private InputStream stream;
     private DataOutputStream writer;
-    Scanner scan;
+    private Scanner scan;
 
-    public HangmanClient() throws Exception{
+    private HangmanClient() throws Exception{
         readBuffer = new byte[50];
         numIncorrect = 0;
         socket = new Socket("localhost", 8080);
@@ -57,18 +57,21 @@ public class HangmanClient {
     public static void main(String[] args) throws Exception {
         System.out.println("Hangman Client is Running");
         HangmanClient client = new HangmanClient();
-        client.readMessage();
+        int status = client.readMessage();
+        System.out.println("Msgflag " + status);
         client.writeMessage();
-        client.readMessage();
+        status = client.readMessage();
+        System.out.println("Msgflag " + status);
     }
 
-    public int readMessage() throws Exception{
+    private int readMessage() throws Exception{
         int msgFlag = this.stream.read();
         //System.out.println(readBuffer);
         //System.out.println(msgFlag);
         String message;
         if (msgFlag > 0) {
-            this.stream.read(this.readBuffer);
+            int status = this.stream.read(this.readBuffer);
+            System.out.println("Read status " + status);
             message = new String(readBuffer);
             message = message.substring(0,msgFlag);
             System.out.println(message);
@@ -77,7 +80,8 @@ public class HangmanClient {
             System.out.println("Word Length is " + wordLength);
             int numIncorrect = this.stream.read();
             System.out.println("Number Incorrect is " + numIncorrect);
-            this.stream.read(this.readBuffer);
+            int status = this.stream.read(this.readBuffer);
+            System.out.println("Read status " + status);
             message = new String(readBuffer);
             String guesses = message.substring(wordLength,
                     wordLength + numIncorrect);
@@ -88,7 +92,7 @@ public class HangmanClient {
         return msgFlag;
     }
 
-    public void writeMessage() throws Exception{
+    private void writeMessage() throws Exception{
         String message = this.scan.nextLine();
         byte msgLength = (byte) (message.length());
         byte[] messageBytes = message.getBytes();
