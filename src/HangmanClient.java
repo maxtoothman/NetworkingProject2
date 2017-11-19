@@ -1,19 +1,8 @@
 package src;
 
-import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
-
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
 /**
  * A client for the TicTacToe game, modified and extended from the
@@ -43,7 +32,7 @@ public class HangmanClient {
     private DataOutputStream writer;
     private Scanner scan;
 
-    private boolean startGame = false;
+    private boolean runGame = false;
 
     private HangmanClient() throws Exception{
         readBuffer = new byte[50];
@@ -53,18 +42,34 @@ public class HangmanClient {
         writer = new DataOutputStream(socket.getOutputStream());
         System.out.println("New Client Created");
         scan = new Scanner(System.in);
-
     }
 
-    public static void main(String[] args) throws Exception {
-        System.out.println("Hangman Client is Running");
-        HangmanClient client = new HangmanClient();
-        int status = client.readMessage();
-//        System.out.println("Msgflag " + status);
-        client.writeMessage();
-        status = client.readMessage();
-//        System.out.println("Msgflag " + status);
+    private void playGame() throws Exception {
+        this.readMessage();
+        initiateGame();
+        while (runGame) {
+            this.readMessage();
+
+        }
     }
+
+    private void initiateGame() throws Exception {
+        String message = askUserInput();
+        this.writeMessage(message);
+        //Make sure the start game message is "y". Otherwise exit application
+        runGame = (runGame || !message.equals("n")) && !runGame && message.equals("y");
+
+        //TODO: add a check to ask again if start game response is not "y/Y" or "n/N"
+        if (!runGame) {
+            System.exit(0);
+        }
+    }
+
+    private void guessLetter() throws Exception {
+        String message = this.askUserInput();
+        this.writeMessage(message);
+    }
+
 
     private int readMessage() throws Exception{
         int msgFlag = this.stream.read();
@@ -94,8 +99,7 @@ public class HangmanClient {
         return msgFlag;
     }
 
-    private void writeMessage() throws Exception {
-        String message = this.scan.nextLine();
+    private void writeMessage(String message) throws Exception {
         byte msgLength = (byte) (message.length());
         byte[] messageBytes = message.getBytes();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -103,17 +107,23 @@ public class HangmanClient {
         out.write(messageBytes);
         byte[] byteMessage = out.toByteArray();
         this.writer.write(byteMessage, 0, message.length() + 1);
+    }
 
-        //Make sure the start game message is "y". Otherwise exit application
-        startGame = (startGame || !message.equals("n")) && !startGame && message.equals("y");
+    private String askUserInput() {
+        return this.scan.nextLine();
+    }
 
-        //TODO: add a check to ask again if start game response is not "y/Y" or "n/N"
-        if (!startGame) {
-            System.exit(0);
-        }
-
+    public static void main(String[] args) throws Exception {
+        System.out.println("Hangman Client is Running");
+        HangmanClient client = new HangmanClient();
+        client.playGame();
     }
 }
+
+
+
+
+
 //        in = new BufferedReader(new InputStreamReader(
 //                socket.getInputStream()));
 //        out = new PrintWriter(socket.getOutputStream(), true);
