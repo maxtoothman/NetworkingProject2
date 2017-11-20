@@ -53,7 +53,7 @@ public class HangmanClient {
         }
     }
 
-    private void initiateGame() throws Exception {
+    private boolean initiateGame() throws Exception {
         String message = askUserInput();
         this.writeMessage(message);
         //Make sure the start game message is "y". Otherwise exit application
@@ -62,6 +62,9 @@ public class HangmanClient {
         //TODO: add a check to ask again if start game response is not "y/Y" or "n/N"
         if (!runGame) {
             System.exit(0);
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -116,7 +119,11 @@ public class HangmanClient {
     public static void main(String[] args) throws Exception {
         System.out.println("Hangman Client is Running");
         HangmanClient client = new HangmanClient();
-        client.playGame();
+        //while loop to execute gameplay
+        while (client.initiateGame()) {
+            client.playGame();
+        }
+
     }
 }
 
