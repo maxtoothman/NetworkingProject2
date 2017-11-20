@@ -40,20 +40,21 @@ public class HangmanClient {
         socket = new Socket("localhost", 8080);
         stream = socket.getInputStream();
         writer = new DataOutputStream(socket.getOutputStream());
-        System.out.println("New Client Created");
+        //System.out.println("New Client Created");
         scan = new Scanner(System.in);
     }
 
     private void playGame() throws Exception {
-        this.readMessage();
         initiateGame();
-        while (runGame) {
-            this.readMessage();
-
+        while(runGame) {
+            readMessage();
+            guessLetter();
         }
     }
 
-    private boolean initiateGame() throws Exception {
+
+    private void initiateGame() throws Exception {
+        System.out.printf("Ready to start the game? (y/n):");
         String message = askUserInput();
         this.writeMessage(message);
         //Make sure the start game message is "y". Otherwise exit application
@@ -62,13 +63,13 @@ public class HangmanClient {
         //TODO: add a check to ask again if start game response is not "y/Y" or "n/N"
         if (!runGame) {
             System.exit(0);
-            return false;
         } else {
-            return true;
+            writeMessage("");
         }
     }
 
     private void guessLetter() throws Exception {
+        System.out.printf("Next Letter To Guess: ");
         String message = this.askUserInput();
         this.writeMessage(message);
     }
@@ -87,17 +88,17 @@ public class HangmanClient {
             System.out.println(message);
         } else {
             int wordLength = this.stream.read();
-            System.out.println("Word Length is " + wordLength);
+            //System.out.println("Word Length is " + wordLength);
             int numIncorrect = this.stream.read();
-            System.out.println("Number Incorrect is " + numIncorrect);
+            //System.out.println("Number Incorrect is " + numIncorrect);
             int status = this.stream.read(this.readBuffer);
 //            System.out.println("Read status " + status);
             message = new String(readBuffer);
             String guesses = message.substring(wordLength,
                     wordLength + numIncorrect);
             message = message.substring(0,wordLength);
-            System.out.println("Message is " + message);
-            System.out.println("Guesses are " + guesses);
+            System.out.println(message);
+            System.out.println("Incorrect Guesses" + guesses);
         }
         return msgFlag;
     }
@@ -117,13 +118,10 @@ public class HangmanClient {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println("Hangman Client is Running");
+        //System.out.println("Hangman Client is Running");
         HangmanClient client = new HangmanClient();
         //while loop to execute gameplay
-        while (client.initiateGame()) {
-            client.playGame();
-        }
-
+        client.playGame();
     }
 }
 

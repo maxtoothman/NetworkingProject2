@@ -21,6 +21,8 @@ public class HangmanServer {
         System.out.println("Hangman Server is Running");
         InetSocketAddress listenerAddress = new InetSocketAddress(8080);
         listener.bind(listenerAddress);
+        boolean runGame = false;
+        String guess;
         //noinspection InfiniteLoopStatement
         while (true) {
             Socket clientSocket = listener.accept();
@@ -28,7 +30,12 @@ public class HangmanServer {
             Game hangmanGame = new Game(clientSocket);
             System.out.println("Word is " + hangmanGame.getWord());
             hangmanGame.startGame();
+            runGame = true;
             hangmanGame.writeControl();
+            while(runGame) {
+                guess = hangmanGame.readMessage();
+                System.out.println(guess);
+            }
         }
     }
 }
@@ -59,7 +66,8 @@ class Game {
         for (int i =0;i<wordLength;i++) {
             emptywordArray[i] = (byte)'_';
         }
-        System.out.println("Empty word array is " + Arrays.toString(emptywordArray));
+        //System.out.println("Empty word array is " + Arrays.toString
+                //(emptywordArray));
         writer = new DataOutputStream(playerSocket.getOutputStream());
         stream = playerSocket.getInputStream();
         scan = new Scanner(System.in);
@@ -69,15 +77,9 @@ class Game {
         return this.word;
     }
 
-    void startGame() throws Exception {
-        //Removed start game message
-        System.out.println("Message Sent");
-        String response = this.readMessage();
-        System.out.println("Reply is " + response);
-        if (response.equals("y")) {
-            System.out.printf("Client is ready");
-        } else {
-            System.out.println("Client is not ready");
+    public void startGame() throws Exception {
+        if (readMessage().length() == 0) {
+            System.out.println("Game Initiated");
         }
     }
 
@@ -104,13 +106,13 @@ class Game {
         this.writer.write(controlMessage,0,wordLength+3+numIncorrect);
     }
 
-    private String readMessage() throws Exception {
+    String readMessage() throws Exception {
         int msgFlag = this.stream.read();
         //System.out.println(readBuffer);
         //System.out.println(msgFlag);
         String message;
         if (msgFlag > 0) {
-            int status = this.stream.read(this.readBuffer);
+            this.stream.read(this.readBuffer);
 //            System.out.println("Read message status: " + status);
             message = new String(readBuffer);
             return message.substring(0,msgFlag);
