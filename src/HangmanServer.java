@@ -70,7 +70,7 @@ class Game {
     }
 
     void startGame() throws Exception {
-        this.writeMessage("Ready to start game? (y/n):");
+        //Removed start game message
         System.out.println("Message Sent");
         String response = this.readMessage();
         System.out.println("Reply is " + response);
