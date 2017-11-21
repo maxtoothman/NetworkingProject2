@@ -31,6 +31,7 @@ public class HangmanClient {
     private InputStream stream;
     private DataOutputStream writer;
     private Scanner scan;
+    private Message lastMessage = new Message();
 
     private boolean runGame = false;
 
@@ -44,11 +45,21 @@ public class HangmanClient {
         scan = new Scanner(System.in);
     }
 
+    private int endConnection() throws IOException {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 1;
+        }
+        return 0;
+    }
+
     private void playGame() throws Exception {
         initiateGame();
         while(runGame) {
-            readMessage();
-            guessLetter();
+            this.readMessage();
+            this.guessLetter();
         }
     }
 
@@ -62,6 +73,7 @@ public class HangmanClient {
 
         //TODO: add a check to ask again if start game response is not "y/Y" or "n/N"
         if (!runGame) {
+            while (endConnection() == 1);
             System.exit(0);
         } else {
             writeMessage("");
@@ -74,33 +86,31 @@ public class HangmanClient {
         this.writeMessage(message);
     }
 
-
-    private int readMessage() throws Exception{
-        int msgFlag = this.stream.read();
-        //System.out.println(readBuffer);
-        //System.out.println(msgFlag);
-        String message;
-        if (msgFlag > 0) {
-            int status = this.stream.read(this.readBuffer);
-//            System.out.println("Read status " + status);
-            message = new String(readBuffer);
-            message = message.substring(0,msgFlag);
-            System.out.println(message);
+    private void checkMessage() throws IOException {
+        if (lastMessage.messageFlag > 0) {
+            this.stream.read(this.readBuffer);
+            lastMessage.message = new String(readBuffer).substring(0,
+                    lastMessage.messageFlag);
+            System.out.println(lastMessage.message);
         } else {
-            int wordLength = this.stream.read();
+            this.wordLength = this.stream.read();
             //System.out.println("Word Length is " + wordLength);
-            int numIncorrect = this.stream.read();
+            this.numIncorrect = this.stream.read();
             //System.out.println("Number Incorrect is " + numIncorrect);
-            int status = this.stream.read(this.readBuffer);
-//            System.out.println("Read status " + status);
-            message = new String(readBuffer);
+            this.stream.read(this.readBuffer);
+            String message = new String(readBuffer);
             String guesses = message.substring(wordLength,
                     wordLength + numIncorrect);
             message = message.substring(0,wordLength);
             System.out.println(message);
             System.out.println("Incorrect Guesses" + guesses);
         }
-        return msgFlag;
+    }
+
+
+    private void readMessage() throws Exception{
+        lastMessage.messageFlag = this.stream.read();
+        this.checkMessage();
     }
 
     private void writeMessage(String message) throws Exception {
@@ -122,6 +132,27 @@ public class HangmanClient {
         HangmanClient client = new HangmanClient();
         //while loop to execute gameplay
         client.playGame();
+    }
+}
+
+class Message {
+    int messageFlag;
+    String message;
+
+    public int getMessageFlag() {
+        return messageFlag;
+    }
+
+    public void setMessageFlag(int messageFlag) {
+        this.messageFlag = messageFlag;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }
 

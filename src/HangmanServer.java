@@ -1,5 +1,7 @@
 package src;
 
+import com.sun.security.ntlm.Server;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -15,28 +17,34 @@ public class HangmanServer {
             "illusion", "marryme", "blueman", "bees", "cornball", "cousin",
             "family", "seal", "poppop", "freebie", "franklin"};
 
+    private ServerSocket listener;
+    private boolean healthyConnection = true;
 
-    public static void main(String[] args) throws Exception {
-        ServerSocket listener = new ServerSocket();
-        System.out.println("Hangman Server is Running");
+
+    private HangmanServer() throws Exception {
+        listener = new ServerSocket();
         InetSocketAddress listenerAddress = new InetSocketAddress(8080);
         listener.bind(listenerAddress);
-        boolean runGame = false;
-        String guess;
-        //noinspection InfiniteLoopStatement
-        while (true) {
+    }
+
+    private void acceptIncomingConnetions() throws Exception {
+        System.out.println("Hangman Server is Running");
+        while (healthyConnection) {
             Socket clientSocket = listener.accept();
             System.out.println("Connection Accepted");
             Game hangmanGame = new Game(clientSocket);
             System.out.println("Word is " + hangmanGame.getWord());
-            hangmanGame.startGame();
-            runGame = true;
+            hangmanGame.playGame();
             hangmanGame.writeControl();
-            while(runGame) {
-                guess = hangmanGame.readMessage();
-                System.out.println(guess);
-            }
         }
+    }
+
+
+
+
+    public static void main(String[] args) throws Exception {
+        HangmanServer server = new HangmanServer();
+        server.acceptIncomingConnetions();
     }
 }
 
@@ -52,14 +60,13 @@ class Game {
     private Socket playerSocket;
     private InputStream stream;
     private Scanner scan;
+    private boolean  runGame = true;
 
     Game(Socket clientSocket) throws Exception{
         readBuffer = new byte[50];
         playerSocket = clientSocket;
         numIncorrect = 0;
-        Random rand = new Random();
-        int index = rand.nextInt(15);
-        word = HangmanServer.dictionary[index];
+        word = HangmanServer.dictionary[new Random().nextInt(15)];
         wordLength = word.length();
         guessArray = new byte[6];
         emptywordArray = new byte[wordLength];
@@ -77,10 +84,23 @@ class Game {
         return this.word;
     }
 
-    public void startGame() throws Exception {
+    void startGame() throws Exception {
         if (readMessage().length() == 0) {
             System.out.println("Game Initiated");
+            this.writeControl();
+        } else {
+            runGame = false;
         }
+
+    }
+
+    void playGame() throws Exception {
+        this.startGame();
+        while (runGame) {
+            this.readMessage();
+            this.writeMessage("Place holder");
+        }
+
     }
 
     private void writeMessage(String message) throws Exception{
