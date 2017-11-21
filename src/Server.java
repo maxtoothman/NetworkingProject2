@@ -140,8 +140,6 @@ class Game extends Thread {
     private void startGame() throws Exception {
         readMessage();
         if (msgFlag == 0) {
-            System.out.println("Game Initiated");
-            System.out.println("Word is: " + this.word);
             this.writeControl();
         } else {
             runGame = false;
